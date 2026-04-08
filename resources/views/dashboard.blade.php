@@ -7,10 +7,37 @@
     <a href="{{ route('gmbh.create') }}" class="btn btn-primary btn-sm">+ Neue Analyse</a>
 @endsection
 
+@push('styles')
+<style>
+    .dashboard-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+    .dashboard-main-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 20px;
+    }
+    .dashboard-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .dashboard-side-stack { display: flex; flex-direction: column; gap: 16px; }
+    @media (max-width: 1200px) {
+        .dashboard-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 900px) {
+        .dashboard-main-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+        .dashboard-stats-grid { grid-template-columns: 1fr; }
+    }
+</style>
+@endpush
+
 @section('content')
 
 {{-- Stats Grid --}}
-<div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:28px;">
+<div class="dashboard-stats-grid">
 
     <div class="card" style="padding:20px;">
         <div style="font-size:11px; color:#64748b; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;">Unternehmen</div>
@@ -38,7 +65,7 @@
 
 </div>
 
-<div style="display:grid; grid-template-columns: 1fr 320px; gap:20px;">
+<div class="dashboard-main-grid">
 
     {{-- Recent Analyses --}}
     <div class="card">
@@ -55,6 +82,7 @@
                 <a href="{{ route('gmbh.create') }}" class="btn btn-primary btn-sm">Erste Analyse erstellen</a>
             </div>
         @else
+            <div class="dashboard-table-wrap">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -95,11 +123,12 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         @endif
     </div>
 
     {{-- Quick Start + Companies --}}
-    <div style="display:flex; flex-direction:column; gap:16px;">
+    <div class="dashboard-side-stack">
 
         <div class="card">
             <div class="card-title">🚀 Quick Start</div>

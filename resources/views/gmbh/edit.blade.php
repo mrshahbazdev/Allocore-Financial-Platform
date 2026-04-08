@@ -4,8 +4,16 @@
 @section('topbar-actions')
     <a href="{{ route('gmbh.show', $analysis) }}" class="btn btn-secondary btn-sm">← Zurück</a>
 @endsection
+@push('styles')
+<style>
+    .gmbh-edit-wrap { max-width: 900px; }
+    @media (max-width: 640px) {
+        .gmbh-edit-wrap { max-width: 100%; }
+    }
+</style>
+@endpush
 @section('content')
-<div style="max-width:900px;">
+<div class="gmbh-edit-wrap">
 <form method="POST" action="{{ route('gmbh.update', $analysis) }}">
 @csrf @method('PATCH')
 <div class="card" style="margin-bottom:16px;">

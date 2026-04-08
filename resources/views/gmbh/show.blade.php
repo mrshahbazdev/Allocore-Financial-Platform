@@ -9,6 +9,33 @@
     <a href="{{ route('gmbh.index') }}" class="btn btn-secondary btn-sm">← Zurück</a>
 @endsection
 
+@push('styles')
+<style>
+    .gmbh-show-top-grid {
+        display: grid;
+        grid-template-columns: 220px 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .gmbh-show-kpi-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .gmbh-show-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    @media (max-width: 1100px) {
+        .gmbh-show-top-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+        .gmbh-show-kpi-grid { grid-template-columns: 1fr; }
+    }
+</style>
+@endpush
+
 @section('content')
 
 @php
@@ -19,7 +46,7 @@
 @endphp
 
 {{-- Top Row: Score + Company + Recommendation --}}
-<div style="display:grid; grid-template-columns: 220px 1fr 1fr; gap:16px; margin-bottom:20px;">
+<div class="gmbh-show-top-grid">
 
     {{-- Score Gauge --}}
     <div class="card" style="text-align:center; padding:28px 20px; border-color:{{ $colorHex }}40;">
@@ -87,11 +114,12 @@
 </div>
 
 {{-- KPI Table --}}
-<div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
+<div class="gmbh-show-kpi-grid">
 
     <div class="card">
         <div class="card-title">📊 KPI Übersicht</div>
         @if($analysis->kpiResults->isNotEmpty())
+        <div class="gmbh-show-table-wrap">
         <table class="data-table">
             <thead>
                 <tr>
@@ -122,6 +150,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
         @else
             <div style="color:#475569; font-size:13px;">Keine KPIs berechnet.</div>
         @endif
@@ -131,6 +160,7 @@
     @if($input)
     <div class="card">
         <div class="card-title">📋 Eingabewerte</div>
+        <div class="gmbh-show-table-wrap">
         <table class="data-table">
             <tbody>
                 @foreach([
@@ -154,6 +184,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
     @endif
 

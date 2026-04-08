@@ -1,8 +1,23 @@
 @extends('layouts.app')
 @section('title', 'Alle Analysen — Allocore')
 @section('page-title', '📋 Alle Analysen')
+@push('styles')
+<style>
+    .analyses-card {
+        overflow: hidden;
+    }
+    .analyses-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .analyses-pagination {
+        margin-top: 12px;
+    }
+</style>
+@endpush
 @section('content')
-<div class="card">
+<div class="card analyses-card">
+    <div class="analyses-table-wrap">
     <table class="data-table">
         <thead>
             <tr><th>Analyse</th><th>Unternehmen</th><th>Typ</th><th>Score</th><th>Status</th><th>Datum</th><th></th></tr>
@@ -33,6 +48,7 @@
             @endforelse
         </tbody>
     </table>
-    <div class="pagination">{{ $analyses->links() }}</div>
+    </div>
+    <div class="pagination analyses-pagination">{{ $analyses->links() }}</div>
 </div>
 @endsection

@@ -7,15 +7,46 @@
     <a href="{{ route('gmbh.index') }}" class="btn btn-secondary btn-sm">← Zurück</a>
 @endsection
 
+@push('styles')
+<style>
+    .gmbh-create-layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 20px;
+        align-items: start;
+    }
+    .gmbh-create-left {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .gmbh-create-right {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: sticky;
+        top: 80px;
+    }
+    @media (max-width: 1024px) {
+        .gmbh-create-layout {
+            grid-template-columns: 1fr;
+        }
+        .gmbh-create-right {
+            position: static;
+        }
+    }
+</style>
+@endpush
+
 @section('content')
 
 <form method="POST" action="{{ route('gmbh.store') }}">
 @csrf
 
-<div style="display:grid; grid-template-columns: 1fr 360px; gap:20px; align-items:start;">
+<div class="gmbh-create-layout">
 
     {{-- Left: Input fields --}}
-    <div style="display:flex; flex-direction:column; gap:16px;">
+    <div class="gmbh-create-left">
 
         {{-- Basic Info --}}
         <div class="card">
@@ -133,7 +164,7 @@
     </div>
 
     {{-- Right: Qualitative Scores --}}
-    <div style="display:flex; flex-direction:column; gap:16px; position:sticky; top:80px;">
+    <div class="gmbh-create-right">
 
         <div class="card">
             <div class="card-title">🎯 Qualitative Bewertung</div>

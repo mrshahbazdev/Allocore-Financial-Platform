@@ -73,6 +73,27 @@
         }
         .topbar-title { font-size: 16px; font-weight: 600; color: #e2e8f0; flex: 1; }
         .topbar-actions { display: flex; align-items: center; gap: 8px; }
+        .menu-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid rgba(99,102,241,0.3);
+            background: rgba(99,102,241,0.12);
+            color: #c7d2fe;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(2,6,23,0.6);
+            z-index: 45;
+        }
 
         /* Buttons */
         .btn { display: inline-flex; align-items: center; gap: 6px;
@@ -132,11 +153,55 @@
         .score-green { color: #10b981; } .score-yellow { color: #f59e0b; }
         .score-red { color: #ef4444; } .score-gray { color: #64748b; }
         .score-lg { font-size: 56px; font-weight: 700; line-height: 1; }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform .2s ease;
+            }
+            body.nav-open .sidebar {
+                transform: translateX(0);
+            }
+            .mobile-overlay {
+                display: block;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity .2s ease;
+            }
+            body.nav-open .mobile-overlay {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .main { margin-left: 0; }
+            .topbar { padding: 0 14px; }
+            .topbar-title { font-size: 14px; }
+            .topbar-actions { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+            .menu-toggle { display: inline-flex; }
+            .page { padding: 16px; }
+            .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+            .col-span-2 { grid-column: auto; }
+        }
+
+        @media (max-width: 640px) {
+            .topbar {
+                min-height: 60px;
+                height: auto;
+                padding: 10px 12px;
+                align-items: flex-start;
+            }
+            .topbar-title { font-size: 13px; }
+            .btn { padding: 7px 12px; font-size: 12px; }
+            .card { padding: 14px; }
+            .data-table { font-size: 12px; display: block; overflow-x: auto; white-space: nowrap; }
+            .page { padding: 12px; }
+        }
     </style>
 
     @stack('styles')
 </head>
 <body>
+
+<div class="mobile-overlay" id="mobileOverlay"></div>
 
 <aside class="sidebar">
     <div class="sidebar-logo">
@@ -200,6 +265,7 @@
 
 <div class="main">
     <div class="topbar">
+        <button type="button" class="menu-toggle" id="menuToggle" aria-label="Navigation umschalten">☰</button>
         <div class="topbar-title">@yield('page-title', 'Dashboard')</div>
         <div class="topbar-actions">@yield('topbar-actions')</div>
     </div>
@@ -220,5 +286,20 @@
 </div>
 
 @stack('scripts')
+<script>
+    (() => {
+        const body = document.body;
+        const toggle = document.getElementById('menuToggle');
+        const overlay = document.getElementById('mobileOverlay');
+        if (!toggle || !overlay) return;
+
+        const closeMenu = () => body.classList.remove('nav-open');
+        toggle.addEventListener('click', () => body.classList.toggle('nav-open'));
+        overlay.addEventListener('click', closeMenu);
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024) closeMenu();
+        });
+    })();
+</script>
 </body>
 </html>

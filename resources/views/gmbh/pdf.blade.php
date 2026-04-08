@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <style>
+    @page { margin: 12mm 10mm 12mm 10mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1e293b; background: #fff; }
+    body { font-family: DejaVu Sans, sans-serif; font-size: 10.5px; color: #1e293b; background: #fff; }
 
     /* ─── Header ─── */
     .header {
         background: linear-gradient(135deg, #1e1b4b, #312e81);
-        color: white; padding: 24px 32px;
+        color: white; padding: 18px 16px;
         display: table; width: 100%;
     }
     .header-left { display: table-cell; vertical-align: middle; }
@@ -21,32 +22,32 @@
 
     /* ─── Score Box ─── */
     .score-box {
-        margin: 20px 32px;
+        margin: 14px 0;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
         display: table;
-        width: calc(100% - 64px);
+        width: 100%;
+        table-layout: fixed;
     }
     .score-cell {
         display: table-cell;
-        padding: 18px 24px;
+        padding: 12px 10px;
         vertical-align: middle;
         border-right: 1px solid #e2e8f0;
-        width: 160px;
         text-align: center;
     }
     .score-cell:last-child { border-right: none; }
-    .score-num { font-size: 42px; font-weight: 700; }
+    .score-num { font-size: 34px; font-weight: 700; }
     .score-green { color: #059669; }
     .score-yellow { color: #d97706; }
     .score-red { color: #dc2626; }
     .score-label { font-size: 10px; color: #64748b; margin-top: 2px; }
     .meta-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
-    .meta-val { font-size: 13px; font-weight: 600; color: #1e293b; }
-    .recommend-text { font-size: 12px; font-weight: 600; }
+    .meta-val { font-size: 12px; font-weight: 600; color: #1e293b; word-break: break-word; }
+    .recommend-text { font-size: 11px; font-weight: 600; word-break: break-word; }
 
     /* ─── Section ─── */
-    .section { margin: 16px 32px; }
+    .section { margin: 12px 0; }
     .section-title {
         font-size: 10px; font-weight: 700; text-transform: uppercase;
         letter-spacing: 1px; color: #6366f1; margin-bottom: 8px;
@@ -54,11 +55,11 @@
     }
 
     /* ─── Tables ─── */
-    table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+    table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: fixed; }
     th { background: #f8fafc; color: #64748b; font-size: 9px; font-weight: 600;
         text-transform: uppercase; letter-spacing: .5px; padding: 7px 10px; text-align: left;
         border: 1px solid #e2e8f0; }
-    td { padding: 8px 10px; border: 1px solid #e2e8f0; vertical-align: middle; }
+    td { padding: 7px 8px; border: 1px solid #e2e8f0; vertical-align: middle; word-break: break-word; }
     tr:nth-child(even) td { background: #f8fafc; }
 
     /* ─── Traffic lights ─── */
@@ -77,17 +78,18 @@
 
     /* ─── Footer ─── */
     .footer {
-        position: fixed; bottom: 0; left: 0; right: 0;
+        position: static;
         background: #f8fafc; border-top: 1px solid #e2e8f0;
-        padding: 8px 32px; display: table; width: 100%;
+        padding: 8px 10px; display: table; width: 100%;
         font-size: 9px; color: #94a3b8;
+        margin-top: 12px;
     }
     .footer-left { display: table-cell; }
     .footer-right { display: table-cell; text-align: right; }
 
     /* ─── Disclaimer ─── */
     .disclaimer {
-        margin: 16px 32px 40px;
+        margin: 12px 0 0;
         padding: 10px 14px;
         background: #fefce8; border: 1px solid #fde68a; border-radius: 6px;
         font-size: 9px; color: #92400e; line-height: 1.6;

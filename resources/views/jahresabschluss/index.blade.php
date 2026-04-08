@@ -4,8 +4,18 @@
 @section('topbar-actions')
     <a href="{{ route('jahresabschluss.create') }}" class="btn btn-primary btn-sm">+ Neue Analyse</a>
 @endsection
+@push('styles')
+<style>
+    .ja-index-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .ja-index-actions { display: flex; gap: 6px; }
+    @media (max-width: 640px) {
+        .ja-index-actions { min-width: 210px; }
+    }
+</style>
+@endpush
 @section('content')
 <div class="card">
+    <div class="ja-index-table-wrap">
     <table class="data-table">
         <thead><tr><th>Analyse</th><th>Unternehmen</th><th>Status</th><th>Erstellt</th><th></th></tr></thead>
         <tbody>
@@ -16,7 +26,7 @@
                 <td><span class="badge badge-{{ $a->status==='complete'?'green':'gray' }}">{{ $a->status }}</span></td>
                 <td style="font-size:12px; color:#475569;">{{ $a->created_at->format('d.m.Y') }}</td>
                 <td>
-                    <div style="display:flex; gap:6px;">
+                    <div class="ja-index-actions">
                         <a href="{{ route('jahresabschluss.show', $a) }}" class="btn btn-secondary btn-sm">Ansehen</a>
                         <a href="{{ route('jahresabschluss.pdf', $a) }}" class="btn btn-secondary btn-sm">PDF</a>
                         <form method="POST" action="{{ route('jahresabschluss.destroy', $a) }}" onsubmit="return confirm('Löschen?')">
@@ -33,6 +43,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
     <div class="pagination">{{ $analyses->links() }}</div>
 </div>
 @endsection

@@ -7,6 +7,16 @@
     <a href="{{ route('gmbh.create') }}" class="btn btn-primary btn-sm">+ Neue Analyse</a>
 @endsection
 
+@push('styles')
+<style>
+    .gmbh-index-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .gmbh-index-actions { display: flex; gap: 6px; justify-content: flex-end; }
+    @media (max-width: 640px) {
+        .gmbh-index-actions { min-width: 210px; }
+    }
+</style>
+@endpush
+
 @section('content')
 
 @if($analyses->isEmpty())
@@ -18,6 +28,7 @@
 </div>
 @else
 <div class="card">
+    <div class="gmbh-index-table-wrap">
     <table class="data-table">
         <thead>
             <tr>
@@ -63,7 +74,7 @@
                 </td>
                 <td style="font-size:12px; color:#475569;">{{ $a->created_at->format('d.m.Y') }}</td>
                 <td style="text-align:right;">
-                    <div style="display:flex; gap:6px; justify-content:flex-end;">
+                    <div class="gmbh-index-actions">
                         <a href="{{ route('gmbh.show', $a) }}" class="btn btn-secondary btn-sm">Ansehen</a>
                         <a href="{{ route('gmbh.pdf', $a) }}" class="btn btn-secondary btn-sm">PDF</a>
                         <form method="POST" action="{{ route('gmbh.destroy', $a) }}" onsubmit="return confirm('Löschen?')">
@@ -76,6 +87,7 @@
             @endforeach
         </tbody>
     </table>
+    </div>
     <div class="pagination">{{ $analyses->links() }}</div>
 </div>
 @endif

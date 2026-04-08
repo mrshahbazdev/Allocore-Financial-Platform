@@ -4,8 +4,26 @@
 @section('topbar-actions')
     <a href="{{ route('immobilien.create') }}" class="btn btn-primary btn-sm">+ Neue Analyse</a>
 @endsection
+@push('styles')
+<style>
+    .immobilien-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .immobilien-row-actions {
+        display: flex;
+        gap: 6px;
+    }
+    @media (max-width: 640px) {
+        .immobilien-row-actions {
+            min-width: 210px;
+        }
+    }
+</style>
+@endpush
 @section('content')
 <div class="card">
+    <div class="immobilien-table-wrap">
     <table class="data-table">
         <thead><tr><th>Analyse</th><th>Unternehmen</th><th>Score</th><th>Empfehlung</th><th>Erstellt</th><th></th></tr></thead>
         <tbody>
@@ -22,7 +40,7 @@
                 <td style="font-size:12px; color:#94a3b8;">{{ Str::limit($a->recommendation ?? '—', 45) }}</td>
                 <td style="font-size:12px; color:#475569;">{{ $a->created_at->format('d.m.Y') }}</td>
                 <td>
-                    <div style="display:flex; gap:6px;">
+                    <div class="immobilien-row-actions">
                         <a href="{{ route('immobilien.show', $a) }}" class="btn btn-secondary btn-sm">Ansehen</a>
                         <a href="{{ route('immobilien.pdf', $a) }}" class="btn btn-secondary btn-sm">PDF</a>
                         <form method="POST" action="{{ route('immobilien.destroy', $a) }}" onsubmit="return confirm('Löschen?')">
@@ -39,6 +57,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
     <div class="pagination">{{ $analyses->links() }}</div>
 </div>
 @endsection

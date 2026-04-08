@@ -4,12 +4,42 @@
 @section('topbar-actions')
     <a href="{{ route('immobilien.index') }}" class="btn btn-secondary btn-sm">← Zurück</a>
 @endsection
+@push('styles')
+<style>
+    .immo-create-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 20px;
+        align-items: start;
+    }
+    .immo-create-left {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .immo-create-right {
+        position: sticky;
+        top: 80px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    @media (max-width: 1024px) {
+        .immo-create-layout {
+            grid-template-columns: 1fr;
+        }
+        .immo-create-right {
+            position: static;
+        }
+    }
+</style>
+@endpush
 @section('content')
 <form method="POST" action="{{ route('immobilien.store') }}">
 @csrf
-<div style="display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start;">
+<div class="immo-create-layout">
 
-<div style="display:flex; flex-direction:column; gap:16px;">
+<div class="immo-create-left">
 
   <div class="card">
     <div class="card-title">📋 Grunddaten</div>
@@ -109,7 +139,7 @@
 </div>
 
 {{-- Right Panel: Scores --}}
-<div style="position:sticky; top:80px; display:flex; flex-direction:column; gap:16px;">
+<div class="immo-create-right">
   <div class="card">
     <div class="card-title">🎯 Qualitative Scores</div>
 

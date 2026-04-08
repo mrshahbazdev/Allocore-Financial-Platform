@@ -43,6 +43,27 @@
             position: sticky; top: 0; z-index: 40;
         }
         .topbar-title { font-size: 14px; font-weight: 600; color: #e2e8f0; flex: 1; }
+        .menu-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid rgba(220,38,38,0.3);
+            background: rgba(220,38,38,0.12);
+            color: #fca5a5;
+            cursor: pointer;
+            font-size: 15px;
+            line-height: 1;
+        }
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(2,6,23,0.6);
+            z-index: 45;
+        }
         .page { padding: 24px; }
         .card { background: rgba(26,10,10,0.4); border: 1px solid rgba(220,38,38,0.12); border-radius: 10px; padding: 18px; }
         .card-title { font-size: 13px; font-weight: 600; color: #fca5a5; margin-bottom: 14px; }
@@ -67,10 +88,47 @@
         .badge-admin { background: rgba(220,38,38,0.15); color: #f87171; border: 1px solid rgba(220,38,38,0.3); }
         .badge-analyst { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
         .badge-viewer { background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.3); }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform .2s ease;
+            }
+            body.nav-open .sidebar {
+                transform: translateX(0);
+            }
+            .mobile-overlay {
+                display: block;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity .2s ease;
+            }
+            body.nav-open .mobile-overlay {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .main { margin-left: 0; }
+            .topbar { padding: 0 14px; }
+            .menu-toggle { display: inline-flex; }
+            .page { padding: 16px; }
+        }
+
+        @media (max-width: 640px) {
+            .topbar {
+                min-height: 56px;
+                height: auto;
+                padding: 10px 12px;
+            }
+            .topbar-title { font-size: 13px; }
+            .card { padding: 14px; }
+            .data-table { font-size: 11px; display: block; overflow-x: auto; white-space: nowrap; }
+            .page { padding: 12px; }
+        }
     </style>
     @stack('styles')
 </head>
 <body>
+<div class="mobile-overlay" id="mobileOverlay"></div>
 <aside class="sidebar">
     <div class="sidebar-logo">
         <h2>🛡 Admin Panel</h2>
@@ -97,6 +155,7 @@
 </aside>
 <div class="main">
     <div class="topbar">
+        <button type="button" class="menu-toggle" id="menuToggle" aria-label="Navigation umschalten">☰</button>
         <div class="topbar-title">@yield('page-title', 'Admin')</div>
         <div>@yield('topbar-actions')</div>
     </div>
@@ -111,5 +170,20 @@
     </div>
 </div>
 @stack('scripts')
+<script>
+    (() => {
+        const body = document.body;
+        const toggle = document.getElementById('menuToggle');
+        const overlay = document.getElementById('mobileOverlay');
+        if (!toggle || !overlay) return;
+
+        const closeMenu = () => body.classList.remove('nav-open');
+        toggle.addEventListener('click', () => body.classList.toggle('nav-open'));
+        overlay.addEventListener('click', closeMenu);
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024) closeMenu();
+        });
+    })();
+</script>
 </body>
 </html>

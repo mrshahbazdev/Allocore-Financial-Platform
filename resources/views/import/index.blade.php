@@ -2,8 +2,33 @@
 @section('title', 'Excel Import — Allocore')
 @section('page-title', '📥 Excel Import')
 
+@push('styles')
+<style>
+    .import-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 20px;
+        align-items: start;
+    }
+    .import-side-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .import-hint-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    @media (max-width: 900px) {
+        .import-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+@endpush
+
 @section('content')
-<div style="display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start;">
+<div class="import-layout">
 
   {{-- Upload Form --}}
   <div class="card">
@@ -59,7 +84,7 @@
   </div>
 
   {{-- Right Panel --}}
-  <div style="display:flex; flex-direction:column; gap:16px;">
+  <div class="import-side-stack">
 
     {{-- Templates Download --}}
     <div class="card">
@@ -84,6 +109,7 @@
     <div class="card" id="hint-box">
       <div class="card-title" id="hint-title">📋 Spalteninfo</div>
       <div id="hint-gmbh" style="display:none;">
+        <div class="import-hint-table-wrap">
         <table class="data-table" style="font-size:11px;">
           <thead><tr><th>Spalte</th><th>Feldname</th></tr></thead>
           <tbody>
@@ -92,6 +118,7 @@
             @endforeach
           </tbody>
         </table>
+        </div>
       </div>
       <div id="hint-jahresabschluss" style="display:none;">
         <div style="font-size:11px; color:#64748b; line-height:1.7;">

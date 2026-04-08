@@ -5,6 +5,19 @@
     <a href="{{ route('jahresabschluss.pdf', $analysis) }}" class="btn btn-secondary btn-sm">⬇ PDF</a>
     <a href="{{ route('jahresabschluss.index') }}" class="btn btn-secondary btn-sm">← Zurück</a>
 @endsection
+@push('styles')
+<style>
+    .ja-show-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .ja-show-year-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 16px;
+    }
+    @media (max-width: 640px) {
+        .ja-show-year-grid { grid-template-columns: 1fr; }
+    }
+</style>
+@endpush
 @section('content')
 
 @php
@@ -19,6 +32,7 @@
     @if($years->isEmpty())
         <p style="color:#475569;">Keine Jahreswerte vorhanden.</p>
     @else
+    <div class="ja-show-table-wrap">
     <table class="data-table">
         <thead>
             <tr>
@@ -52,6 +66,7 @@
             @endforeach
         </tbody>
     </table>
+    </div>
     @endif
 </div>
 
@@ -64,7 +79,7 @@
 @endif
 
 {{-- Year Data Tables --}}
-<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:16px;">
+<div class="ja-show-year-grid">
 @foreach($years as $y)
 <div class="card">
     <div class="card-title">📅 {{ $y->year_label }}</div>

@@ -5,6 +5,35 @@
     <a href="{{ route('immobilien.pdf', $analysis) }}" class="btn btn-secondary btn-sm">⬇ PDF</a>
     <a href="{{ route('immobilien.index') }}" class="btn btn-secondary btn-sm">← Zurück</a>
 @endsection
+@push('styles')
+<style>
+    .immobilien-score-grid {
+        display: grid;
+        grid-template-columns: 200px 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .immobilien-kpi-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    .immobilien-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    @media (max-width: 1100px) {
+        .immobilien-score-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    @media (max-width: 900px) {
+        .immobilien-kpi-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+@endpush
 @section('content')
 
 @php
@@ -14,7 +43,7 @@
     $input = $analysis->immobilienInput;
 @endphp
 
-<div style="display:grid; grid-template-columns:200px 1fr 1fr; gap:16px; margin-bottom:20px;">
+<div class="immobilien-score-grid">
     {{-- Score --}}
     <div class="card" style="text-align:center; padding:28px 16px; border-color:{{ $colorHex }}40;">
         <div style="font-size:11px; color:#64748b; text-transform:uppercase; margin-bottom:10px;">Score</div>
@@ -35,7 +64,7 @@
             {{ $analysis->recommendation }}
         </div>
         @if($input)
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <div class="form-grid">
             @foreach([
                 ['Kaufpreis', number_format($input->purchase_price, 0, ',', '.') . ' €'],
                 ['Eigenkapital', number_format($input->equity, 0, ',', '.') . ' €'],
@@ -73,9 +102,10 @@
 </div>
 
 {{-- KPI Table --}}
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+<div class="immobilien-kpi-grid">
 <div class="card">
     <div class="card-title">📊 KPI-Ergebnisse</div>
+    <div class="immobilien-table-wrap">
     <table class="data-table">
         <thead><tr><th>KPI</th><th>Wert</th><th>Gewicht</th><th>Status</th></tr></thead>
         <tbody>
@@ -94,11 +124,13 @@
             @endforeach
         </tbody>
     </table>
+    </div>
 </div>
 
 @if($input)
 <div class="card">
     <div class="card-title">📋 Objektdaten</div>
+    <div class="immobilien-table-wrap">
     <table class="data-table">
         <tbody>
             @foreach([
@@ -120,6 +152,7 @@
             @endforeach
         </tbody>
     </table>
+    </div>
 </div>
 @endif
 </div>

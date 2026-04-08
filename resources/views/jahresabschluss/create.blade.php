@@ -4,6 +4,35 @@
 @section('topbar-actions')
     <a href="{{ route('jahresabschluss.index') }}" class="btn btn-secondary btn-sm">← Zurück</a>
 @endsection
+@push('styles')
+<style>
+    .ja-tabs {
+        margin-bottom: 8px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .ja-year-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+    }
+    @media (max-width: 1024px) {
+        .ja-year-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    @media (max-width: 640px) {
+        .ja-year-grid {
+            grid-template-columns: 1fr;
+        }
+        .ja-tab-btn {
+            flex: 1 1 calc(50% - 8px);
+            text-align: center;
+        }
+    }
+</style>
+@endpush
 @section('content')
 
 <form method="POST" action="{{ route('jahresabschluss.store') }}">
@@ -30,9 +59,9 @@
 </div>
 
 {{-- 3 Year Tabs --}}
-<div style="margin-bottom:8px; display:flex; gap:8px;">
+<div class="ja-tabs">
     @foreach([0,1,2] as $i)
-    <button type="button" onclick="showYear({{ $i }})" id="tab-{{ $i }}"
+    <button type="button" onclick="showYear({{ $i }})" id="tab-{{ $i }}" class="ja-tab-btn"
         style="padding:8px 20px; border-radius:8px; border:1px solid rgba(99,102,241,0.3);
         background:{{ $i===0?'rgba(99,102,241,0.2)':'transparent' }};
         color:{{ $i===0?'#818cf8':'#64748b' }}; cursor:pointer; font-size:13px; font-family:inherit;">
@@ -51,7 +80,7 @@
         <input type="text" name="years[{{ $i }}][year_label]" class="form-control"
             placeholder="{{ date('Y') - (2-$i) }}" value="{{ old("years.$i.year_label", date('Y') - (2-$i)) }}" required>
     </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+    <div class="ja-year-grid">
         <div class="form-group"><label class="form-label">Umsatz (€)</label>
             <input type="number" step="0.01" name="years[{{ $i }}][revenue]" class="form-control" placeholder="2.000.000" value="{{ old("years.$i.revenue") }}"></div>
         <div class="form-group"><label class="form-label">EBIT (€)</label>

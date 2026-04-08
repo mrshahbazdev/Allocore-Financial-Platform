@@ -178,11 +178,33 @@
   </div>
 
   <div class="card">
-    <div class="card-title">⚖️ KPI-Gewichtung</div>
-    @foreach([['Cashflow-Rendite','20%','#10b981'],['DSCR','20%','#10b981'],['Mietsteigerung','15%','#818cf8'],['Nettorendite','10%','#6366f1'],['LTV','10%','#6366f1'],['Mietmultiplikator','10%','#6366f1'],['Lage','10%','#6366f1'],['Zustand','5%','#64748b']] as [$n,$p,$c])
+    <div class="card-title">⚖️ KPI-Gewichtung (manuell)</div>
+    <div style="font-size:11px; color:#64748b; margin-bottom:10px;">
+      Relative Faktoren: 10 wirkt 10x so stark wie 1, 0 deaktiviert den KPI.
+    </div>
+    @foreach([
+      ['CASHFLOW', 'Cashflow p.a.', 10, '#10b981'],
+      ['CF_RENDITE', 'Cashflow-Rendite', 20, '#10b981'],
+      ['DSCR', 'DSCR', 20, '#10b981'],
+      ['MIETSTEIGERUNG', 'Mietsteigerung', 15, '#818cf8'],
+      ['NETTORENDITE', 'Nettorendite', 10, '#6366f1'],
+      ['LTV', 'LTV', 10, '#6366f1'],
+      ['MIET_MULTI', 'Mietmultiplikator', 10, '#6366f1'],
+      ['LOCATION_SCORE', 'Lage', 10, '#6366f1'],
+      ['CONDITION_SCORE', 'Zustand', 5, '#64748b'],
+    ] as [$code, $n, $defaultWeight, $c])
     <div style="display:flex; align-items:center; gap:8px; font-size:12px; margin-bottom:6px;">
         <div style="flex:1; color:#94a3b8;">{{ $n }}</div>
-        <div style="font-weight:600; color:{{ $c }};">{{ $p }}</div>
+        <input
+          type="number"
+          min="0"
+          max="100"
+          step="1"
+          name="weights[{{ $code }}]"
+          value="{{ old('weights.' . $code, $defaultWeight) }}"
+          class="form-control"
+          style="width:72px; padding:6px 8px; color:{{ $c }}; font-weight:600;"
+        >
     </div>
     @endforeach
   </div>

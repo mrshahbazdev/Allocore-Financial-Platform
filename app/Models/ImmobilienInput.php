@@ -14,6 +14,7 @@ class ImmobilienInput extends Model
         'rent_net', 'market_rent', 'vacancy_rate', 'management_costs_pct',
         'equity', 'loan_rate', 'repayment_rate', 'loan_term_years',
         'location_score', 'condition_score', 'rent_growth_score',
+        'custom_weights',
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class ImmobilienInput extends Model
         'location_score'       => 'integer',
         'condition_score'      => 'integer',
         'rent_growth_score'    => 'integer',
+        'custom_weights'       => 'array',
     ];
 
     public function analysis(): BelongsTo

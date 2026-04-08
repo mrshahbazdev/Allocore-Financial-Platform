@@ -12,6 +12,18 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ImmobilienController extends Controller
 {
+    private const WEIGHT_CODES = [
+        'CASHFLOW',
+        'NETTORENDITE',
+        'CF_RENDITE',
+        'DSCR',
+        'LTV',
+        'MIET_MULTI',
+        'MIETSTEIGERUNG',
+        'LOCATION_SCORE',
+        'CONDITION_SCORE',
+    ];
+
     public function index()
     {
         $analyses = Analysis::with('company')
@@ -42,6 +54,8 @@ class ImmobilienController extends Controller
             'repayment_rate' => 'required|numeric|min:0|max:20',
             'location_score' => 'required|integer|min:1|max:10',
             'condition_score'=> 'required|integer|min:1|max:10',
+            'weights'        => 'nullable|array',
+            'weights.*'      => 'nullable|numeric|min:0|max:100',
         ]);
 
         $analysis = Analysis::create([
@@ -52,7 +66,8 @@ class ImmobilienController extends Controller
             'status'     => 'draft',
         ]);
 
-        $inputData = $request->except(['company_id', 'name', '_token']);
+        $inputData = $request->except(['company_id', 'name', '_token', 'weights']);
+        $inputData['custom_weights'] = $this->normalizeWeights($request->input('weights', []));
         $input = ImmobilienInput::create(array_merge($inputData, ['analysis_id' => $analysis->id]));
 
         $service = new ImmobilienScoringService($input);
@@ -123,5 +138,19 @@ class ImmobilienController extends Controller
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('immobilien-analyse-' . $immobilien->id . '.pdf');
+    }
+
+    private function normalizeWeights(array $weights): array
+    {
+        $normalized = [];
+        foreach (self::WEIGHT_CODES as $code) {
+            if (!array_key_exists($code, $weights)) {
+                continue;
+            }
+            $value = (float)$weights[$code];
+            $normalized[$code] = round(max(0, min(100, $value)), 2);
+        }
+
+        return $normalized;
     }
 }

@@ -9,10 +9,15 @@ use App\Models\KpiResult;
 class ImmobilienScoringService
 {
     private ImmobilienInput $input;
+    /** @var array<string, float> */
+    private array $customWeights = [];
 
     public function __construct(ImmobilienInput $input)
     {
         $this->input = $input;
+        $this->customWeights = collect($this->input->custom_weights ?? [])
+            ->mapWithKeys(fn ($value, $code) => [(string)$code => (float)$value])
+            ->all();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -150,37 +155,41 @@ class ImmobilienScoringService
     {
         $scores = [];
 
+        // Cashflow p.a. (10) — green >= 0, yellow >= -5000
+        $v = $this->cashflow();
+        $scores[] = ['w' => $this->weight('CASHFLOW', 10), 's' => $this->scoreHigh($v, 0, -5000)];
+
         // Nettorendite (10%) — green ≥ 5%, yellow ≥ 3%
         $v = $this->nettorendite();
-        $scores[] = ['w' => 10, 's' => $v !== null ? $this->scoreHigh($v, 5, 3) : 50];
+        $scores[] = ['w' => $this->weight('NETTORENDITE', 10), 's' => $v !== null ? $this->scoreHigh($v, 5, 3) : 50];
 
         // Cashflow-Rendite (20%) — green ≥ 8%, yellow ≥ 3%
         $v = $this->cashflowRendite();
-        $scores[] = ['w' => 20, 's' => $v !== null ? $this->scoreHigh($v, 8, 3) : 50];
+        $scores[] = ['w' => $this->weight('CF_RENDITE', 20), 's' => $v !== null ? $this->scoreHigh($v, 8, 3) : 50];
 
         // DSCR (20%) — green ≥ 1.25, yellow ≥ 1.0
         $v = $this->dscr();
-        $scores[] = ['w' => 20, 's' => $v !== null ? $this->scoreHigh($v, 1.25, 1.0) : 50];
+        $scores[] = ['w' => $this->weight('DSCR', 20), 's' => $v !== null ? $this->scoreHigh($v, 1.25, 1.0) : 50];
 
         // LTV (10%, lower is better) — green ≤ 60%, yellow ≤ 80%
         $v = $this->ltv();
-        $scores[] = ['w' => 10, 's' => $v !== null ? $this->scoreLow($v, 60, 80) : 50];
+        $scores[] = ['w' => $this->weight('LTV', 10), 's' => $v !== null ? $this->scoreLow($v, 60, 80) : 50];
 
         // Lage-Score (10%)
         $v = $this->input->location_score;
-        $scores[] = ['w' => 10, 's' => $v !== null ? $this->scoreScale($v) : 50];
+        $scores[] = ['w' => $this->weight('LOCATION_SCORE', 10), 's' => $v !== null ? $this->scoreScale($v) : 50];
 
         // Zustand-Score (5%)
         $v = $this->input->condition_score;
-        $scores[] = ['w' => 5, 's' => $v !== null ? $this->scoreScale($v) : 50];
+        $scores[] = ['w' => $this->weight('CONDITION_SCORE', 5), 's' => $v !== null ? $this->scoreScale($v) : 50];
 
         // Mietmultiplikator (10%, lower is better) — green ≤ 20, yellow ≤ 28
         $v = $this->mietMultiplikator();
-        $scores[] = ['w' => 10, 's' => $v !== null ? $this->scoreLow($v, 20, 28) : 50];
+        $scores[] = ['w' => $this->weight('MIET_MULTI', 10), 's' => $v !== null ? $this->scoreLow($v, 20, 28) : 50];
 
         // Mietsteigerungspotenzial (15%) — green ≥ 15%, yellow ≥ 5%
         $v = $this->mietsteigerungspotenzial();
-        $scores[] = ['w' => 15, 's' => $v !== null ? $this->scoreHigh($v, 15, 5) : 50];
+        $scores[] = ['w' => $this->weight('MIETSTEIGERUNG', 15), 's' => $v !== null ? $this->scoreHigh($v, 15, 5) : 50];
 
         $total = 0;
         $weightSum = 0;
@@ -189,6 +198,11 @@ class ImmobilienScoringService
             $weightSum += $s['w'];
         }
         return $weightSum > 0 ? round($total / $weightSum, 2) : 0;
+    }
+
+    private function weight(string $code, float $default): float
+    {
+        return array_key_exists($code, $this->customWeights) ? $this->customWeights[$code] : $default;
     }
 
     public function getRecommendation(float $score): string
@@ -212,13 +226,13 @@ class ImmobilienScoringService
         $kpis = [
             ['code' => 'GESAMTINVEST',   'name' => 'Gesamtinvestition',        'value' => $this->gesamtinvestition(),    'unit' => 'EUR', 'weight' => 0],
             ['code' => 'NOI',            'name' => 'NOI (Nettobetriebsertrag)', 'value' => $this->noi(),                  'unit' => 'EUR', 'weight' => 0],
-            ['code' => 'CASHFLOW',       'name' => 'Cashflow p.a.',             'value' => $this->cashflow(),             'unit' => 'EUR', 'weight' => 0],
-            ['code' => 'NETTORENDITE',   'name' => 'Nettorendite',              'value' => $this->nettorendite(),         'unit' => '%',   'weight' => 10],
-            ['code' => 'CF_RENDITE',     'name' => 'Cashflow-Rendite (EK)',     'value' => $this->cashflowRendite(),      'unit' => '%',   'weight' => 20],
-            ['code' => 'DSCR',           'name' => 'DSCR',                      'value' => $this->dscr(),                 'unit' => 'x',   'weight' => 20],
-            ['code' => 'LTV',            'name' => 'LTV',                        'value' => $this->ltv(),                  'unit' => '%',   'weight' => 10],
-            ['code' => 'MIET_MULTI',     'name' => 'Mietmultiplikator',         'value' => $this->mietMultiplikator(),    'unit' => 'x',   'weight' => 10],
-            ['code' => 'MIETSTEIGERUNG', 'name' => 'Mietsteigerungspotenzial', 'value' => $this->mietsteigerungspotenzial(), 'unit' => '%', 'weight' => 15],
+            ['code' => 'CASHFLOW',       'name' => 'Cashflow p.a.',             'value' => $this->cashflow(),             'unit' => 'EUR', 'weight' => $this->weight('CASHFLOW', 10)],
+            ['code' => 'NETTORENDITE',   'name' => 'Nettorendite',              'value' => $this->nettorendite(),         'unit' => '%',   'weight' => $this->weight('NETTORENDITE', 10)],
+            ['code' => 'CF_RENDITE',     'name' => 'Cashflow-Rendite (EK)',     'value' => $this->cashflowRendite(),      'unit' => '%',   'weight' => $this->weight('CF_RENDITE', 20)],
+            ['code' => 'DSCR',           'name' => 'DSCR',                      'value' => $this->dscr(),                 'unit' => 'x',   'weight' => $this->weight('DSCR', 20)],
+            ['code' => 'LTV',            'name' => 'LTV',                        'value' => $this->ltv(),                  'unit' => '%',   'weight' => $this->weight('LTV', 10)],
+            ['code' => 'MIET_MULTI',     'name' => 'Mietmultiplikator',         'value' => $this->mietMultiplikator(),    'unit' => 'x',   'weight' => $this->weight('MIET_MULTI', 10)],
+            ['code' => 'MIETSTEIGERUNG', 'name' => 'Mietsteigerungspotenzial', 'value' => $this->mietsteigerungspotenzial(), 'unit' => '%', 'weight' => $this->weight('MIETSTEIGERUNG', 15)],
         ];
 
         $analysis->kpiResults()->delete();

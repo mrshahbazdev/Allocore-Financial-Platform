@@ -64,6 +64,12 @@ class GmbhAnalyseController extends Controller
             'weights'          => 'nullable|array',
             'weights.*'        => 'nullable|numeric|min:0|max:100',
         ]);
+        $normalizedWeights = $this->normalizeWeights($request->input('weights', []));
+        if (array_sum($normalizedWeights) > 100) {
+            return back()
+                ->withErrors(['weights' => 'Die Summe der KPI-Gewichte darf 100% nicht ueberschreiten.'])
+                ->withInput();
+        }
 
         // Create parent analysis
         $analysis = Analysis::create([
@@ -76,7 +82,7 @@ class GmbhAnalyseController extends Controller
 
         // Create input record
         $inputData = $request->except(['company_id', 'name', '_token', 'weights']);
-        $inputData['custom_weights'] = $this->normalizeWeights($request->input('weights', []));
+        $inputData['custom_weights'] = $normalizedWeights;
         $input = GmbhInput::create(array_merge($inputData, ['analysis_id' => $analysis->id]));
 
         // Run scoring
@@ -114,11 +120,17 @@ class GmbhAnalyseController extends Controller
             'weights'         => 'nullable|array',
             'weights.*'       => 'nullable|numeric|min:0|max:100',
         ]);
+        $normalizedWeights = $this->normalizeWeights($request->input('weights', []));
+        if (array_sum($normalizedWeights) > 100) {
+            return back()
+                ->withErrors(['weights' => 'Die Summe der KPI-Gewichte darf 100% nicht ueberschreiten.'])
+                ->withInput();
+        }
 
         $gmbh->update(['name' => $request->name]);
 
         $inputData = $request->except(['name', '_token', '_method', 'weights']);
-        $inputData['custom_weights'] = $this->normalizeWeights($request->input('weights', []));
+        $inputData['custom_weights'] = $normalizedWeights;
         $gmbh->gmbhInput->update($inputData);
 
         // Re-calculate

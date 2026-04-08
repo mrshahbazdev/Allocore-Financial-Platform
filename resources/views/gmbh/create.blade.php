@@ -196,7 +196,7 @@
         <div class="card">
             <div class="card-title">⚖️ Gewichtung der KPIs (manuell)</div>
             <div style="font-size:11px; color:#64748b; margin-bottom:10px;">
-                Passen Sie die Gewichte pro Analyse an. Werte zwischen 0 und 100.
+                Prozentanteile je KPI (0-100). Die Summe darf 100% nicht ueberschreiten.
             </div>
             <div style="display:flex; flex-direction:column; gap:8px;">
                 @foreach([

@@ -192,12 +192,10 @@ class ImmobilienScoringService
         $scores[] = ['w' => $this->weight('MIETSTEIGERUNG', 15), 's' => $v !== null ? $this->scoreHigh($v, 15, 5) : 50];
 
         $total = 0;
-        $weightSum = 0;
         foreach ($scores as $s) {
-            $total += $s['s'] * $s['w'];
-            $weightSum += $s['w'];
+            $total += $s['s'] * ($s['w'] / 100);
         }
-        return $weightSum > 0 ? round($total / $weightSum, 2) : 0;
+        return round($total, 2);
     }
 
     private function weight(string $code, float $default): float

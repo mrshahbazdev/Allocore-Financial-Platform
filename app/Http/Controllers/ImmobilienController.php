@@ -57,6 +57,12 @@ class ImmobilienController extends Controller
             'weights'        => 'nullable|array',
             'weights.*'      => 'nullable|numeric|min:0|max:100',
         ]);
+        $normalizedWeights = $this->normalizeWeights($request->input('weights', []));
+        if (array_sum($normalizedWeights) > 100) {
+            return back()
+                ->withErrors(['weights' => 'Die Summe der KPI-Gewichte darf 100% nicht ueberschreiten.'])
+                ->withInput();
+        }
 
         $analysis = Analysis::create([
             'company_id' => $request->company_id,
@@ -67,7 +73,7 @@ class ImmobilienController extends Controller
         ]);
 
         $inputData = $request->except(['company_id', 'name', '_token', 'weights']);
-        $inputData['custom_weights'] = $this->normalizeWeights($request->input('weights', []));
+        $inputData['custom_weights'] = $normalizedWeights;
         $input = ImmobilienInput::create(array_merge($inputData, ['analysis_id' => $analysis->id]));
 
         $service = new ImmobilienScoringService($input);

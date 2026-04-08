@@ -95,7 +95,7 @@
 <div class="card" style="margin-bottom:16px;">
     <div class="card-title">⚖️ Gewichtung der KPIs (manuell)</div>
     <div style="font-size:11px; color:#64748b; margin-bottom:10px;">
-        Diese Gewichte gelten fuer genau diese Analyse.
+        Prozentanteile je KPI fuer diese Analyse. Die Summe darf 100% nicht ueberschreiten.
     </div>
     @php
         $weights = $input->custom_weights ?? [];

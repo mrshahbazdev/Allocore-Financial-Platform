@@ -180,7 +180,7 @@
   <div class="card">
     <div class="card-title">⚖️ KPI-Gewichtung (manuell)</div>
     <div style="font-size:11px; color:#64748b; margin-bottom:10px;">
-      Relative Faktoren: 10 wirkt 10x so stark wie 1, 0 deaktiviert den KPI.
+      Prozentanteile je KPI (0-100). Die Summe darf 100% nicht ueberschreiten.
     </div>
     @foreach([
       ['CASHFLOW', 'Cashflow p.a.', 10, '#10b981'],

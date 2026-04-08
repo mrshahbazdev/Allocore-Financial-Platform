@@ -158,13 +158,11 @@ class GmbhScoringService
         ];
 
         $total = 0;
-        $weightSum = 0;
         foreach ($scores as $s) {
-            $total += $s['score'] * $s['weight'];
-            $weightSum += $s['weight'];
+            $total += $s['score'] * ($s['weight'] / 100);
         }
 
-        return $weightSum > 0 ? round($total / $weightSum, 2) : 0;
+        return round($total, 2);
     }
 
     public function getRecommendation(float $score): string

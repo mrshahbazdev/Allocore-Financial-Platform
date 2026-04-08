@@ -1,0 +1,133 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Analysis;
+use App\Models\Company;
+use App\Models\GmbhInput;
+use App\Services\GmbhScoringService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
+
+class GmbhAnalyseController extends Controller
+{
+    public function index()
+    {
+        $analyses = Analysis::with('company')
+            ->where('user_id', Auth::id())
+            ->where('type', 'gmbh')
+            ->latest()
+            ->paginate(10);
+
+        return view('gmbh.index', compact('analyses'));
+    }
+
+    public function create()
+    {
+        $companies = Company::where('user_id', Auth::id())->get();
+        return view('gmbh.create', compact('companies'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'company_id'       => 'required|exists:companies,id',
+            'name'             => 'required|string|max:255',
+            'revenue_current'  => 'required|numeric|min:0',
+            'revenue_prev'     => 'required|numeric|min:0',
+            'equity'           => 'required|numeric',
+            'total_debt'       => 'nullable|numeric|min:0',
+            'current_assets'   => 'nullable|numeric|min:0',
+            'current_liabilities' => 'nullable|numeric|min:0',
+            'cash'             => 'nullable|numeric|min:0',
+            'monthly_burn'     => 'nullable|numeric|min:0',
+            'depreciation'     => 'nullable|numeric|min:0',
+            'interest'         => 'nullable|numeric|min:0',
+            'net_profit'       => 'nullable|numeric',
+            'cac'              => 'nullable|numeric|min:0',
+            'ltv'              => 'nullable|numeric|min:0',
+            'mgmt_score'       => 'nullable|integer|min:1|max:10',
+            'market_score'     => 'nullable|integer|min:1|max:10',
+        ]);
+
+        // Create parent analysis
+        $analysis = Analysis::create([
+            'company_id' => $request->company_id,
+            'user_id'    => Auth::id(),
+            'type'       => 'gmbh',
+            'name'       => $request->name,
+            'status'     => 'draft',
+        ]);
+
+        // Create input record
+        $inputData = $request->except(['company_id', 'name', '_token']);
+        $input = GmbhInput::create(array_merge($inputData, ['analysis_id' => $analysis->id]));
+
+        // Run scoring
+        $service = new GmbhScoringService($input);
+        $service->calculateAndSave($analysis);
+
+        return redirect()->route('gmbh.show', $analysis)
+            ->with('success', 'GmbH Analyse wurde erfolgreich erstellt und berechnet.');
+    }
+
+    public function show(Analysis $gmbh)
+    {
+        $this->authorize('view', $gmbh);
+        $gmbh->load(['company', 'gmbhInput', 'kpiResults']);
+        return view('gmbh.show', ['analysis' => $gmbh]);
+    }
+
+    public function edit(Analysis $gmbh)
+    {
+        $this->authorize('update', $gmbh);
+        $companies = Company::where('user_id', Auth::id())->get();
+        $gmbh->load('gmbhInput');
+        return view('gmbh.edit', ['analysis' => $gmbh, 'companies' => $companies]);
+    }
+
+    public function update(Request $request, Analysis $gmbh)
+    {
+        $this->authorize('update', $gmbh);
+
+        $request->validate([
+            'name'            => 'required|string|max:255',
+            'revenue_current' => 'required|numeric|min:0',
+            'revenue_prev'    => 'required|numeric|min:0',
+            'equity'          => 'required|numeric',
+        ]);
+
+        $gmbh->update(['name' => $request->name]);
+
+        $inputData = $request->except(['name', '_token', '_method']);
+        $gmbh->gmbhInput->update($inputData);
+
+        // Re-calculate
+        $service = new GmbhScoringService($gmbh->gmbhInput->fresh());
+        $service->calculateAndSave($gmbh->fresh());
+
+        return redirect()->route('gmbh.show', $gmbh)
+            ->with('success', 'Analyse aktualisiert und neu berechnet.');
+    }
+
+    public function destroy(Analysis $gmbh)
+    {
+        $this->authorize('delete', $gmbh);
+        $gmbh->delete();
+        return redirect()->route('gmbh.index')
+            ->with('success', 'Analyse gelöscht.');
+    }
+
+    /** PDF Export */
+    public function exportPdf(Analysis $gmbh)
+    {
+        $this->authorize('view', $gmbh);
+        $gmbh->load(['company', 'gmbhInput', 'kpiResults']);
+
+        $pdf = Pdf::loadView('gmbh.pdf', ['analysis' => $gmbh])
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('gmbh-analyse-' . $gmbh->id . '.pdf');
+    }
+}

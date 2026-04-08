@@ -18,14 +18,14 @@ class DatabaseSeeder extends Seeder
         // 3. Demo Admin User
         $admin = User::firstOrCreate(
             ['email' => 'admin@allocore.de'],
-            User::factory()->make(['name' => 'Admin User', 'email' => 'admin@allocore.de'])->toArray()
+            User::factory()->raw(['name' => 'Admin User', 'email' => 'admin@allocore.de'])
         );
         $admin->assignRole('Admin');
 
         // 4. Demo Analyst User
         $analyst = User::firstOrCreate(
             ['email' => 'analyst@allocore.de'],
-            User::factory()->make(['name' => 'Analyst User', 'email' => 'analyst@allocore.de'])->toArray()
+            User::factory()->raw(['name' => 'Analyst User', 'email' => 'analyst@allocore.de'])
         );
         $analyst->assignRole('Analyst');
     }

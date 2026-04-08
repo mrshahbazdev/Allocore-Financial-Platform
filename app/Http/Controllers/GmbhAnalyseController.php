@@ -12,6 +12,18 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class GmbhAnalyseController extends Controller
 {
+    private const WEIGHT_CODES = [
+        'UMSATZ_WACHSTUM',
+        'EBITDA_MARGE',
+        'DEBT_EQUITY',
+        'CURRENT_RATIO',
+        'RUNWAY',
+        'LTV_CAC',
+        'EK_QUOTE',
+        'MGMT_SCORE',
+        'MARKET_SCORE',
+    ];
+
     public function index()
     {
         $analyses = Analysis::with('company')
@@ -49,6 +61,8 @@ class GmbhAnalyseController extends Controller
             'ltv'              => 'nullable|numeric|min:0',
             'mgmt_score'       => 'nullable|integer|min:1|max:10',
             'market_score'     => 'nullable|integer|min:1|max:10',
+            'weights'          => 'nullable|array',
+            'weights.*'        => 'nullable|numeric|min:0|max:100',
         ]);
 
         // Create parent analysis
@@ -61,7 +75,8 @@ class GmbhAnalyseController extends Controller
         ]);
 
         // Create input record
-        $inputData = $request->except(['company_id', 'name', '_token']);
+        $inputData = $request->except(['company_id', 'name', '_token', 'weights']);
+        $inputData['custom_weights'] = $this->normalizeWeights($request->input('weights', []));
         $input = GmbhInput::create(array_merge($inputData, ['analysis_id' => $analysis->id]));
 
         // Run scoring
@@ -96,11 +111,14 @@ class GmbhAnalyseController extends Controller
             'revenue_current' => 'required|numeric|min:0',
             'revenue_prev'    => 'required|numeric|min:0',
             'equity'          => 'required|numeric',
+            'weights'         => 'nullable|array',
+            'weights.*'       => 'nullable|numeric|min:0|max:100',
         ]);
 
         $gmbh->update(['name' => $request->name]);
 
-        $inputData = $request->except(['name', '_token', '_method']);
+        $inputData = $request->except(['name', '_token', '_method', 'weights']);
+        $inputData['custom_weights'] = $this->normalizeWeights($request->input('weights', []));
         $gmbh->gmbhInput->update($inputData);
 
         // Re-calculate
@@ -129,5 +147,19 @@ class GmbhAnalyseController extends Controller
             ->setPaper('a4', 'portrait');
 
         return $pdf->download('gmbh-analyse-' . $gmbh->id . '.pdf');
+    }
+
+    private function normalizeWeights(array $weights): array
+    {
+        $normalized = [];
+        foreach (self::WEIGHT_CODES as $code) {
+            if (!array_key_exists($code, $weights)) {
+                continue;
+            }
+            $value = (float)$weights[$code];
+            $normalized[$code] = round(max(0, min(100, $value)), 2);
+        }
+
+        return $normalized;
     }
 }

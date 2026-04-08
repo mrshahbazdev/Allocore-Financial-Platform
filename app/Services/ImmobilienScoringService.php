@@ -183,10 +183,12 @@ class ImmobilienScoringService
         $scores[] = ['w' => 15, 's' => $v !== null ? $this->scoreHigh($v, 15, 5) : 50];
 
         $total = 0;
+        $weightSum = 0;
         foreach ($scores as $s) {
-            $total += $s['s'] * ($s['w'] / 100);
+            $total += $s['s'] * $s['w'];
+            $weightSum += $s['w'];
         }
-        return round($total, 2);
+        return $weightSum > 0 ? round($total / $weightSum, 2) : 0;
     }
 
     public function getRecommendation(float $score): string

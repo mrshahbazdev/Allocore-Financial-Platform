@@ -92,6 +92,41 @@
         </div>
     </div>
 </div>
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-title">⚖️ Gewichtung der KPIs (manuell)</div>
+    <div style="font-size:11px; color:#64748b; margin-bottom:10px;">
+        Diese Gewichte gelten fuer genau diese Analyse.
+    </div>
+    @php
+        $weights = $input->custom_weights ?? [];
+    @endphp
+    <div class="form-grid">
+        @foreach([
+            ['EBITDA_MARGE', 'EBITDA-Marge', 20],
+            ['UMSATZ_WACHSTUM', 'Umsatzwachstum', 15],
+            ['DEBT_EQUITY', 'Debt/Equity', 15],
+            ['CURRENT_RATIO', 'Current Ratio', 10],
+            ['RUNWAY', 'Runway', 10],
+            ['LTV_CAC', 'LTV/CAC', 10],
+            ['EK_QUOTE', 'Eigenkapitalquote', 10],
+            ['MGMT_SCORE', 'Management', 10],
+            ['MARKET_SCORE', 'Markt', 10],
+        ] as [$code, $label, $defaultWeight])
+        <div class="form-group">
+            <label class="form-label">{{ $label }} (%)</label>
+            <input
+                type="number"
+                name="weights[{{ $code }}]"
+                class="form-control"
+                min="0"
+                max="100"
+                step="1"
+                value="{{ old('weights.' . $code, $weights[$code] ?? $defaultWeight) }}"
+            >
+        </div>
+        @endforeach
+    </div>
+</div>
 <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:14px;">
     🔢 Neu berechnen & speichern
 </button>

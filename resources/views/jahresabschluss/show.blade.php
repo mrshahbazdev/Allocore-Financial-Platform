@@ -109,4 +109,6 @@
 @endforeach
 </div>
 
+@include('partials.kpi-glossary')
+
 @endsection

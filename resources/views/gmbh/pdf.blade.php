@@ -35,6 +35,8 @@
         vertical-align: middle;
         border-right: 1px solid #e2e8f0;
         text-align: center;
+        overflow-wrap: anywhere;
+        word-wrap: break-word;
     }
     .score-cell:last-child { border-right: none; }
     .score-num { font-size: 34px; font-weight: 700; }
@@ -94,6 +96,16 @@
         background: #fefce8; border: 1px solid #fde68a; border-radius: 6px;
         font-size: 9px; color: #92400e; line-height: 1.6;
     }
+    .glossary-note {
+        margin: 10px 0 0;
+        padding: 8px 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 9px;
+        color: #475569;
+        line-height: 1.5;
+    }
+    .glossary-note strong { color: #1e293b; }
 </style>
 </head>
 <body>
@@ -210,6 +222,14 @@
     </div>
 </div>
 @endif
+
+<div class="glossary-note">
+    <strong>Kurz-Glossar:</strong>
+    EBIT = operativer Gewinn vor Zinsen/Steuern,
+    EBITDA = EBIT plus Abschreibungen,
+    Current Ratio = Umlaufvermoegen / kurzfristige Verbindlichkeiten,
+    Debt/Equity = Schulden / Eigenkapital.
+</div>
 
 {{-- DISCLAIMER --}}
 <div class="disclaimer">

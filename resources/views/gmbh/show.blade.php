@@ -220,6 +220,8 @@ new ApexCharts(document.querySelector("#kpiChart"), {
 @endpush
 @endif
 
+@include('partials.kpi-glossary')
+
 {{-- Delete form --}}
 <div style="text-align:right; margin-top:8px;">
     <form method="POST" action="{{ route('gmbh.destroy', $analysis) }}"

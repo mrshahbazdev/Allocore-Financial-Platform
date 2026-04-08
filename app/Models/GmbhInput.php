@@ -17,6 +17,7 @@ class GmbhInput extends Model
         'cash', 'monthly_burn',
         'cac', 'ltv',
         'mgmt_score', 'market_score',
+        'custom_weights',
     ];
 
     protected $casts = [
@@ -37,6 +38,7 @@ class GmbhInput extends Model
         'monthly_burn'    => 'decimal:2',
         'cac'             => 'decimal:2',
         'ltv'             => 'decimal:2',
+        'custom_weights'  => 'array',
     ];
 
     public function analysis(): BelongsTo

@@ -5,14 +5,28 @@ namespace App\Services;
 use App\Models\GmbhInput;
 use App\Models\Analysis;
 use App\Models\KpiResult;
+use App\Models\KpiThreshold;
 
 class GmbhScoringService
 {
     private GmbhInput $input;
+    /** @var array<string, KpiThreshold> */
+    private array $thresholds = [];
+    /** @var array<string, float> */
+    private array $customWeights = [];
 
     public function __construct(GmbhInput $input)
     {
         $this->input = $input;
+        $this->thresholds = KpiThreshold::query()
+            ->where('tool', 'gmbh')
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('kpi_code')
+            ->all();
+        $this->customWeights = collect($this->input->custom_weights ?? [])
+            ->mapWithKeys(fn ($value, $code) => [(string)$code => (float)$value])
+            ->all();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -88,50 +102,69 @@ class GmbhScoringService
         return 20.0;
     }
 
+    private function evaluateKpi(string $code, ?float $value, array $fallback): array
+    {
+        $threshold = $this->thresholds[$code] ?? null;
+        $weight = array_key_exists($code, $this->customWeights)
+            ? $this->customWeights[$code]
+            : ($threshold?->weight !== null ? (float)$threshold->weight : (float)$fallback['weight']);
+
+        if ($value === null) {
+            return ['weight' => $weight, 'score' => 50.0, 'traffic_light' => 'yellow'];
+        }
+
+        if ($threshold) {
+            $light = $threshold->evaluate($value);
+            $score = $light === 'green' ? 100.0 : ($light === 'yellow' ? 60.0 : 20.0);
+            return ['weight' => $weight, 'score' => $score, 'traffic_light' => $light];
+        }
+
+        $light = $fallback['lower_is_better']
+            ? ($value <= $fallback['green'] ? 'green' : ($value <= $fallback['yellow'] ? 'yellow' : 'red'))
+            : ($value >= $fallback['green'] ? 'green' : ($value >= $fallback['yellow'] ? 'yellow' : 'red'));
+        $score = $light === 'green' ? 100.0 : ($light === 'yellow' ? 60.0 : 20.0);
+
+        return ['weight' => $weight, 'score' => $score, 'traffic_light' => $light];
+    }
+
+    private function defaultRule(string $code): array
+    {
+        $rules = [
+            'UMSATZ_WACHSTUM' => ['green' => 10, 'yellow' => 0, 'lower_is_better' => false, 'weight' => 15],
+            'EBITDA_MARGE'    => ['green' => 15, 'yellow' => 5, 'lower_is_better' => false, 'weight' => 20],
+            'DEBT_EQUITY'     => ['green' => 1.0, 'yellow' => 2.5, 'lower_is_better' => true, 'weight' => 15],
+            'CURRENT_RATIO'   => ['green' => 1.5, 'yellow' => 1.0, 'lower_is_better' => false, 'weight' => 10],
+            'RUNWAY'          => ['green' => 18, 'yellow' => 6, 'lower_is_better' => false, 'weight' => 10],
+            'LTV_CAC'         => ['green' => 3.0, 'yellow' => 1.5, 'lower_is_better' => false, 'weight' => 10],
+            'EK_QUOTE'        => ['green' => 30, 'yellow' => 15, 'lower_is_better' => false, 'weight' => 10],
+            'MGMT_SCORE'      => ['green' => 7, 'yellow' => 5, 'lower_is_better' => false, 'weight' => 10],
+            'MARKET_SCORE'    => ['green' => 7, 'yellow' => 5, 'lower_is_better' => false, 'weight' => 10],
+        ];
+
+        return $rules[$code] ?? ['green' => 0, 'yellow' => 0, 'lower_is_better' => false, 'weight' => 0];
+    }
+
     public function weightedScore(): float
     {
-        $scores = [];
-
-        // Umsatzwachstum (15%) — green ≥ 10%, yellow ≥ 0%
-        $v = $this->umsatzwachstum();
-        $scores[] = ['weight' => 15, 'score' => $v !== null ? $this->scoreKpi($v, ['green' => 10, 'yellow' => 0]) : 50];
-
-        // EBITDA-Marge (20%) — green ≥ 15%, yellow ≥ 5%
-        $v = $this->ebitdaMarge();
-        $scores[] = ['weight' => 20, 'score' => $v !== null ? $this->scoreKpi($v, ['green' => 15, 'yellow' => 5]) : 50];
-
-        // Debt/Equity (15%, lower is better) — green ≤ 1.0, yellow ≤ 2.5
-        $v = $this->debtEquityRatio();
-        $scores[] = ['weight' => 15, 'score' => $v !== null ? $this->scoreLowerIsBetter($v, ['green' => 1.0, 'yellow' => 2.5]) : 50];
-
-        // Current Ratio (10%) — green ≥ 1.5, yellow ≥ 1.0
-        $v = $this->currentRatio();
-        $scores[] = ['weight' => 10, 'score' => $v !== null ? $this->scoreKpi($v, ['green' => 1.5, 'yellow' => 1.0]) : 50];
-
-        // Runway (10%) — green ≥ 18 months, yellow ≥ 6
-        $v = $this->runway();
-        $scores[] = ['weight' => 10, 'score' => $v !== null ? $this->scoreKpi($v, ['green' => 18, 'yellow' => 6]) : 50];
-
-        // LTV/CAC (10%) — green ≥ 3, yellow ≥ 1.5
-        $v = $this->ltvCacRatio();
-        $scores[] = ['weight' => 10, 'score' => $v !== null ? $this->scoreKpi($v, ['green' => 3.0, 'yellow' => 1.5]) : 50];
-
-        // Management Score (10%) — 1-10 scale → green ≥ 7, yellow ≥ 5
-        $v = $this->input->mgmt_score;
-        $scores[] = ['weight' => 10, 'score' => $v !== null ? $this->scoreKpi($v, ['green' => 7, 'yellow' => 5]) : 50];
-
-        // Market Score (10%) — 1-10 scale → green ≥ 7, yellow ≥ 5
-        $v = $this->input->market_score;
-        $scores[] = ['weight' => 10, 'score' => $v !== null ? $this->scoreKpi($v, ['green' => 7, 'yellow' => 5]) : 50];
+        $scores = [
+            $this->evaluateKpi('UMSATZ_WACHSTUM', $this->umsatzwachstum(), $this->defaultRule('UMSATZ_WACHSTUM')),
+            $this->evaluateKpi('EBITDA_MARGE', $this->ebitdaMarge(), $this->defaultRule('EBITDA_MARGE')),
+            $this->evaluateKpi('DEBT_EQUITY', $this->debtEquityRatio(), $this->defaultRule('DEBT_EQUITY')),
+            $this->evaluateKpi('CURRENT_RATIO', $this->currentRatio(), $this->defaultRule('CURRENT_RATIO')),
+            $this->evaluateKpi('RUNWAY', $this->runway(), $this->defaultRule('RUNWAY')),
+            $this->evaluateKpi('LTV_CAC', $this->ltvCacRatio(), $this->defaultRule('LTV_CAC')),
+            $this->evaluateKpi('MGMT_SCORE', $this->input->mgmt_score, $this->defaultRule('MGMT_SCORE')),
+            $this->evaluateKpi('MARKET_SCORE', $this->input->market_score, $this->defaultRule('MARKET_SCORE')),
+        ];
 
         $total = 0;
         $weightSum = 0;
         foreach ($scores as $s) {
-            $total += $s['score'] * ($s['weight'] / 100);
+            $total += $s['score'] * $s['weight'];
             $weightSum += $s['weight'];
         }
 
-        return $weightSum > 0 ? round($total, 2) : 0;
+        return $weightSum > 0 ? round($total / $weightSum, 2) : 0;
     }
 
     public function getRecommendation(float $score): string
@@ -164,6 +197,8 @@ class GmbhScoringService
             ['code' => 'RUNWAY',          'name' => 'Runway (Monate)',       'value' => $this->runway(),           'unit' => 'Mo',  'weight' => 10],
             ['code' => 'LTV_CAC',         'name' => 'LTV/CAC Ratio',         'value' => $this->ltvCacRatio(),     'unit' => 'x',   'weight' => 10],
             ['code' => 'EK_QUOTE',        'name' => 'Eigenkapitalquote',     'value' => $this->eigenkapitalQuote(), 'unit' => '%', 'weight' => 10],
+            ['code' => 'MGMT_SCORE',      'name' => 'Management-Score',      'value' => $this->input->mgmt_score,  'unit' => '/10', 'weight' => 10],
+            ['code' => 'MARKET_SCORE',    'name' => 'Markt & Wettbewerb',    'value' => $this->input->market_score,'unit' => '/10', 'weight' => 10],
         ];
 
         $score = $this->weightedScore();
@@ -173,15 +208,16 @@ class GmbhScoringService
 
         foreach ($kpis as $kpi) {
             if ($kpi['value'] === null) continue;
+            $eval = $this->evaluateKpi($kpi['code'], (float)$kpi['value'], $this->defaultRule($kpi['code']));
             KpiResult::create([
                 'analysis_id'   => $analysis->id,
                 'kpi_code'      => $kpi['code'],
                 'kpi_name'      => $kpi['name'],
                 'value'         => $kpi['value'],
                 'score'         => $score,
-                'weight'        => $kpi['weight'],
+                'weight'        => $eval['weight'],
                 'unit'          => $kpi['unit'],
-                'traffic_light' => $this->getTrafficLight($score),
+                'traffic_light' => $eval['traffic_light'],
             ]);
         }
 

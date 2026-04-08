@@ -194,24 +194,34 @@
 
         {{-- KPI Weights Overview --}}
         <div class="card">
-            <div class="card-title">⚖️ Gewichtung der KPIs</div>
+            <div class="card-title">⚖️ Gewichtung der KPIs (manuell)</div>
+            <div style="font-size:11px; color:#64748b; margin-bottom:10px;">
+                Passen Sie die Gewichte pro Analyse an. Werte zwischen 0 und 100.
+            </div>
             <div style="display:flex; flex-direction:column; gap:8px;">
                 @foreach([
-                    ['EBITDA-Marge', '20%', '#10b981'],
-                    ['Umsatzwachstum', '15%', '#818cf8'],
-                    ['Debt/Equity', '15%', '#818cf8'],
-                    ['Current Ratio', '10%', '#6366f1'],
-                    ['Runway', '10%', '#6366f1'],
-                    ['LTV/CAC', '10%', '#6366f1'],
-                    ['Management', '10%', '#6366f1'],
-                    ['Markt', '10%', '#6366f1'],
-                ] as [$name, $pct, $color])
+                    ['EBITDA_MARGE', 'EBITDA-Marge', 20, '#10b981'],
+                    ['UMSATZ_WACHSTUM', 'Umsatzwachstum', 15, '#818cf8'],
+                    ['DEBT_EQUITY', 'Debt/Equity', 15, '#818cf8'],
+                    ['CURRENT_RATIO', 'Current Ratio', 10, '#6366f1'],
+                    ['RUNWAY', 'Runway', 10, '#6366f1'],
+                    ['LTV_CAC', 'LTV/CAC', 10, '#6366f1'],
+                    ['EK_QUOTE', 'Eigenkapitalquote', 10, '#6366f1'],
+                    ['MGMT_SCORE', 'Management', 10, '#6366f1'],
+                    ['MARKET_SCORE', 'Markt', 10, '#6366f1'],
+                ] as [$code, $name, $defaultWeight, $color])
                 <div style="display:flex; align-items:center; gap:8px; font-size:12px;">
                     <div style="flex:1; color:#94a3b8;">{{ $name }}</div>
-                    <div style="font-weight:600; color:{{ $color }};">{{ $pct }}</div>
-                    <div style="width:60px; height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden;">
-                        <div style="height:100%; width:{{ $pct }}; background:{{ $color }};"></div>
-                    </div>
+                    <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        name="weights[{{ $code }}]"
+                        value="{{ old('weights.' . $code, $defaultWeight) }}"
+                        class="form-control"
+                        style="width:72px; padding:6px 8px; color:{{ $color }}; font-weight:600;"
+                    >
                 </div>
                 @endforeach
             </div>
